@@ -8,7 +8,8 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useRegisterSW } from "virtual:pwa-register/react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -94,6 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "icon", href: "/favicon.ico", sizes: "any" },
       { rel: "icon", type: "image/svg+xml", href: "/medcheck-icon.svg" },
       { rel: "apple-touch-icon", href: "/icons/medcheck-icon-180.png" },
@@ -132,9 +134,16 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function PwaRegister() {
+  useRegisterSW({ immediate: true });
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   // Surface route changes to a placeholder analytics layer.
   // TODO: replace with real analytics provider (Plausible/PostHog/etc.)
   useEffect(() => {
@@ -150,6 +159,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      {mounted && <PwaRegister />}
       <BackgroundBlobs />
       <Navbar />
       <AnimatePresence mode="wait">
