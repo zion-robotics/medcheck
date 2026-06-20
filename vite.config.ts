@@ -10,6 +10,7 @@ export default defineConfig({
   },
   plugins: [
     VitePWA({
+      outDir: ".vercel/output/static",
       registerType: "autoUpdate",
       injectRegister: "auto",
       includeAssets: ["favicon.ico", "medcheck-icon.svg", "icons/*.png"],
