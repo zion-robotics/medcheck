@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { Search, Sparkles, Database, ShieldCheck, PlayCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { Search, Sparkles, Database, ShieldCheck } from "lucide-react";
 import { PageWrap } from "@/components/PageWrap";
-import { FadeIn, Stagger, staggerItem } from "@/components/motion-primitives";
+import { FadeIn } from "@/components/motion-primitives";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/about")({
@@ -19,7 +20,154 @@ export const Route = createFileRoute("/about")({
   component: AboutPage,
 });
 
+const NODES = [
+  { x: 80, y: 200, label: "Scan or search", Icon: Search },
+  { x: 280, y: 90, label: "AI Pre-Screen", Icon: Sparkles },
+  { x: 520, y: 90, label: "NAFDAC Database", Icon: Database },
+  { x: 720, y: 200, label: "Result", Icon: ShieldCheck },
+];
+
+const PATH_D = "M 80 200 Q 180 60, 280 90 T 520 90 Q 620 90, 720 200";
+
+const STEPS = [
+  { title: "Scan or search", desc: "Snap a photo or type the drug name, batch, or NAFDAC reg number." },
+  { title: "AI pre-screen", desc: "Our model flags packaging anomalies — fonts, colors, batch formats — common to counterfeits." },
+  { title: "Cross-reference NAFDAC", desc: "We match against the NAFDAC alert index and community reports for risk signals." },
+  { title: "Clear result + official link", desc: "A plain-language verdict, with a direct link to NAFDAC's Green Book for definitive confirmation." },
+];
+
+function HowStep({
+  index,
+  title,
+  desc,
+  activeIndex,
+  onEnter,
+}: {
+  index: number;
+  title: string;
+  desc: string;
+  activeIndex: number;
+  onEnter: (i: number) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { amount: 0.55, margin: "-20% 0px -30% 0px" });
+  useEffect(() => {
+    if (inView) onEnter(index);
+  }, [inView, index, onEnter]);
+
+  const reached = index <= activeIndex;
+  const isActive = index === activeIndex;
+  const isPast = index < activeIndex;
+  const cardOnRight = index % 2 === 0;
+
+  const circle = (
+    <motion.div
+      initial={false}
+      animate={{ scale: isActive ? 1.06 : 1 }}
+      transition={{ type: "spring", stiffness: 260, damping: 20 }}
+      className={`relative z-10 grid h-14 w-14 place-items-center rounded-full border font-mono text-sm transition-colors duration-500 md:h-[72px] md:w-[72px] md:text-base ${
+        reached ? "border-[#0A4174] bg-[#0A4174] text-white" : "border-[#BDD8E9] bg-white text-muted-foreground"
+      } ${isActive ? "shadow-[0_0_0_6px_rgba(10,65,116,0.15)]" : ""}`}
+    >
+      0{index + 1}
+    </motion.div>
+  );
+
+  const card = (
+    <motion.div
+      initial={{ opacity: 0, x: cardOnRight ? 40 : -40 }}
+      animate={inView ? { opacity: 1, x: 0 } : { opacity: 0.35, x: cardOnRight ? 12 : -12 }}
+      transition={{ duration: 0.55, ease: [0.2, 0.8, 0.2, 1] }}
+      className={`card-surface rounded-2xl border p-5 transition-all duration-500 md:p-6 ${
+        isActive
+          ? "border-[#0A4174] shadow-[0_10px_40px_-20px_rgba(10,65,116,0.5)]"
+          : isPast
+            ? "border-[#BDD8E9] opacity-60"
+            : "border-[#BDD8E9]/60 opacity-50"
+      }`}
+    >
+      <h3 className={`font-bold text-lg ${reached ? "text-navy" : "text-muted-foreground"}`}>
+        {index + 1}. {title}
+      </h3>
+      <p className="mt-1 text-sm text-muted-foreground max-w-xl">{desc}</p>
+    </motion.div>
+  );
+
+  return (
+    <div ref={ref} className="relative pb-12 last:pb-0">
+      <div className="grid grid-cols-[56px_1fr] gap-5 md:hidden">
+        {circle}
+        {card}
+      </div>
+
+      <div className="hidden md:grid md:grid-cols-[1fr_72px_1fr] md:items-center md:gap-8">
+        {cardOnRight ? (
+          <>
+            <div />
+            <div className="flex items-center justify-center">
+              <div
+                className={`absolute left-1/2 ml-9 h-px w-8 transition-colors duration-500 ${reached ? "bg-[#0A4174]" : "bg-[#BDD8E9]"}`}
+              />
+              {circle}
+            </div>
+            <div className="pl-8">{card}</div>
+          </>
+        ) : (
+          <>
+            <div className="flex justify-end pr-8">{card}</div>
+            <div className="flex items-center justify-center">
+              <div
+                className={`absolute right-1/2 mr-9 h-px w-8 transition-colors duration-500 ${reached ? "bg-[#0A4174]" : "bg-[#BDD8E9]"}`}
+              />
+              {circle}
+            </div>
+            <div />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HowStepsFlow() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const onEnter = (i: number) => setActiveIndex((cur) => (i > cur ? i : cur));
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start center", "end center"],
+  });
+  const lineScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
+
+  return (
+    <div ref={containerRef} className="relative mt-10">
+      <div className="absolute left-[27px] top-0 h-full w-px bg-[#BDD8E9] md:left-1/2 md:-translate-x-1/2" />
+      <motion.div
+        style={{ scaleY: lineScale, transformOrigin: "top" }}
+        className="absolute left-[27px] top-0 h-full w-px bg-[#0A4174] md:left-1/2 md:-translate-x-1/2"
+      />
+      {STEPS.map((s, i) => (
+        <HowStep
+          key={s.title}
+          index={i}
+          title={s.title}
+          desc={s.desc}
+          activeIndex={activeIndex}
+          onEnter={onEnter}
+        />
+      ))}
+    </div>
+  );
+}
+
 function AboutPage() {
+  const [loop, setLoop] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setLoop((l) => l + 1), 4000);
+    return () => clearInterval(id);
+  }, []);
+  const isGenuine = loop % 2 === 0;
+
   return (
     <PageWrap>
       <section className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
@@ -35,63 +183,48 @@ function AboutPage() {
           </p>
         </FadeIn>
 
-        <FadeIn delay={0.1}>
-          {/* Video hero placeholder */}
-          <div className="mt-10 relative overflow-hidden rounded-3xl aspect-video card-surface group cursor-pointer">
-            <div className="absolute inset-0" style={{ background: "var(--gradient-navy)" }} />
-            <div className="absolute inset-0 opacity-30" style={{ background: "radial-gradient(circle at 30% 30%, rgba(189,216,233,0.5), transparent 60%)" }} />
-            <div className="absolute inset-0 grid place-items-center">
-              <motion.button
-                whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.96 }}
-                className="h-20 w-20 rounded-full bg-white/95 grid place-items-center shadow-2xl"
-                aria-label="Play demo video"
-              >
-                <PlayCircle className="h-10 w-10 text-brand" />
-              </motion.button>
-            </div>
-            <div className="absolute bottom-5 left-5 text-white">
-              <p className="text-sm font-semibold">Demo · 90 seconds</p>
-              <p className="text-xs text-white/70">See MedCheck in action</p>
-            </div>
-            {/* TODO: replace with actual <video> element pointing at hosted demo */}
-          </div>
-        </FadeIn>
-
         <FadeIn delay={0.15}>
           <h2 className="mt-16 text-2xl sm:text-3xl font-extrabold text-navy">The path from suspicion to certainty</h2>
         </FadeIn>
 
-        <Stagger className="mt-6 relative" stagger={0.15}>
-          {/* connecting path */}
-          <svg aria-hidden className="absolute left-6 top-0 bottom-0 w-px" style={{ overflow: "visible" }}>
-            <motion.line
-              x1="0" y1="0" x2="0" y2="100%"
-              stroke="url(#g1)" strokeWidth="2" strokeDasharray="6 6"
-              initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }}
-              transition={{ duration: 1.6, ease: "easeOut" }}
-            />
-            <defs>
-              <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#0A4174" /><stop offset="100%" stopColor="#4E8EA2" />
-              </linearGradient>
-            </defs>
-          </svg>
+        <FadeIn delay={0.1}>
+          <div className="mt-8 card-surface p-6 md:p-10 -mx-2 overflow-x-auto">
+            <svg viewBox="0 0 800 280" className="w-full min-w-[720px] h-auto">
+              <path d={PATH_D} stroke="#BDD8E9" strokeWidth="2" fill="none" strokeDasharray="4 6" />
+              {NODES.map((n, i) => {
+                const flash = i === 3;
+                const flashColor = flash ? (isGenuine ? "#2E9E5B" : "#E8503A") : "#0A4174";
+                return (
+                  <g key={i} transform={`translate(${n.x} ${n.y})`}>
+                    <motion.circle
+                      r="28"
+                      fill={flashColor}
+                      animate={flash ? { scale: [1, 1.15, 1] } : {}}
+                      transition={{ duration: 0.6, repeat: flash ? Infinity : 0, repeatDelay: 3.4 }}
+                    />
+                    <foreignObject x="-12" y="-12" width="24" height="24">
+                      <div className="flex items-center justify-center text-white">
+                        <n.Icon size={20} />
+                      </div>
+                    </foreignObject>
+                    <text y="58" textAnchor="middle" className="fill-navy" style={{ font: "600 13px Inter" }}>
+                      {n.label}
+                    </text>
+                  </g>
+                );
+              })}
+              <motion.g
+                animate={{ offsetDistance: ["0%", "100%"] }}
+                transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
+                style={{ offsetPath: `path("${PATH_D}")`, offsetRotate: "0deg" } as any}
+              >
+                <circle r="10" fill="#fff" stroke="#4E8EA2" strokeWidth="3" />
+              </motion.g>
+            </svg>
+          </div>
+        </FadeIn>
 
-          {[
-            { icon: Search, title: "Scan or search", desc: "Snap a photo or type the drug name, batch, or NAFDAC reg number." },
-            { icon: Sparkles, title: "AI pre-screen", desc: "Our model flags packaging anomalies — fonts, colors, batch formats — common to counterfeits." },
-            { icon: Database, title: "Cross-reference NAFDAC", desc: "We match against the NAFDAC alert index and community reports for risk signals." },
-            { icon: ShieldCheck, title: "Clear result + official link", desc: "A plain-language verdict, with a direct link to NAFDAC's Green Book for definitive confirmation." },
-          ].map((s, i) => (
-            <motion.div key={s.title} variants={staggerItem} className="relative pl-16 pb-8">
-              <div className="absolute left-0 top-0 h-12 w-12 rounded-2xl grid place-items-center [background:var(--gradient-icon)] text-white shadow-lg">
-                <s.icon className="h-5 w-5" />
-              </div>
-              <h3 className="font-bold text-navy">{i + 1}. {s.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground max-w-xl">{s.desc}</p>
-            </motion.div>
-          ))}
-        </Stagger>
+        <HowStepsFlow />
 
         <FadeIn delay={0.1}>
           <div className="mt-12 card-surface p-7">
