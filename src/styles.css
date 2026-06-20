@@ -183,12 +183,12 @@
 }
 
 /* ===== Gradient border (for outbound NAFDAC cards) ===== */
-@utility gradient-border {
+.gradient-border {
   position: relative;
   background: #fff;
   border-radius: var(--radius-2xl);
 }
-@utility gradient-border::before {
+.gradient-border::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -202,7 +202,8 @@
   transition: opacity 0.3s ease;
   pointer-events: none;
 }
-@utility gradient-border-hover::before { opacity: 1; }
+.gradient-border-hover::before,
+.gradient-border:hover::before { opacity: 1; }
 
 /* ===== Story link ===== */
 @utility story-link {
