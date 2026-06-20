@@ -22,7 +22,6 @@ export const Route = createFileRoute("/alerts")({
     links: [{ rel: "canonical", href: "/alerts" }],
   }),
   component: AlertsPage,
-  ssr: false,
 });
 
 function AlertsPage() {
