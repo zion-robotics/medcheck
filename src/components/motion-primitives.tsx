@@ -1,12 +1,10 @@
-import { motion, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 export function CountUp({ to, duration = 1.4, suffix = "" }: { to: number; duration?: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-50px" });
   const [val, setVal] = useState(0);
   useEffect(() => {
-    if (!inView) return;
     const start = performance.now();
     let raf = 0;
     const tick = (now: number) => {
@@ -17,7 +15,7 @@ export function CountUp({ to, duration = 1.4, suffix = "" }: { to: number; durat
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [inView, to, duration]);
+  }, [to, duration]);
   return <span ref={ref}>{val.toLocaleString()}{suffix}</span>;
 }
 
@@ -52,8 +50,7 @@ export function FadeIn({ children, delay = 0, y = 24, className = "" }: { childr
     <motion.div
       className={className}
       initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
@@ -66,8 +63,7 @@ export function Stagger({ children, className = "", delayChildren = 0, stagger =
     <motion.div
       className={className}
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-60px" }}
+      animate="visible"
       variants={{ visible: { transition: { staggerChildren: stagger, delayChildren } } }}
     >
       {children}
