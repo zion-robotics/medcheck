@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { useState } from "react";
+import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import { Search, Camera, ScanLine, Database, Sparkles, ShieldCheck, ArrowRight, ExternalLink, MapPin, Activity } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,140 @@ export const Route = createFileRoute("/")({
   }),
   component: HomePage,
 });
+
+const HOW_STEPS = [
+  { icon: Search, title: "Search or Scan", desc: "Look up a drug name, batch, or NAFDAC reg number — or snap a photo of the packaging." },
+  { icon: Sparkles, title: "AI Pre-Screen", desc: "Our model flags obvious packaging anomalies before you even buy." },
+  { icon: Database, title: "Cross-Reference", desc: "We check NAFDAC alerts and community reports for matching risk signals." },
+  { icon: ShieldCheck, title: "Clear Result", desc: "A plain-language verdict — with a link to official NAFDAC verification." },
+];
+
+function HowStep({
+  index,
+  icon: Icon,
+  title,
+  desc,
+  activeIndex,
+  onEnter,
+}: {
+  index: number;
+  icon: typeof Search;
+  title: string;
+  desc: string;
+  activeIndex: number;
+  onEnter: (i: number) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { amount: 0.55, margin: "-20% 0px -30% 0px" });
+  useEffect(() => {
+    if (inView) onEnter(index);
+  }, [inView, index, onEnter]);
+
+  const reached = index <= activeIndex;
+  const isActive = index === activeIndex;
+  const isPast = index < activeIndex;
+  const cardOnRight = index % 2 === 0;
+
+  const circle = (
+    <motion.div
+      initial={false}
+      animate={{ scale: isActive ? 1.06 : 1 }}
+      transition={{ type: "spring", stiffness: 260, damping: 20 }}
+      className={`relative z-10 grid h-14 w-14 place-items-center rounded-full border transition-colors duration-500 md:h-[72px] md:w-[72px] ${
+        reached ? "border-brand bg-brand text-white" : "border-light bg-white text-muted-foreground"
+      } ${isActive ? "shadow-[0_0_0_6px_rgba(10,65,116,0.15)]" : ""}`}
+    >
+      <Icon className="h-5 w-5 md:h-6 md:w-6" />
+    </motion.div>
+  );
+
+  const card = (
+    <motion.div
+      initial={{ opacity: 0, x: cardOnRight ? 40 : -40 }}
+      animate={inView ? { opacity: 1, x: 0 } : { opacity: 0.35, x: cardOnRight ? 12 : -12 }}
+      transition={{ duration: 0.55, ease: [0.2, 0.8, 0.2, 1] }}
+      className={`card-surface rounded-2xl border p-5 transition-all duration-500 md:p-6 ${
+        isActive
+          ? "border-brand shadow-[0_10px_40px_-20px_rgba(10,65,116,0.5)]"
+          : isPast
+            ? "border-light opacity-60"
+            : "border-light/60 opacity-50"
+      }`}
+    >
+      <h3 className={`font-bold text-lg ${reached ? "text-navy" : "text-muted-foreground"}`}>
+        {index + 1}. {title}
+      </h3>
+      <p className="mt-1.5 text-sm text-muted-foreground">{desc}</p>
+    </motion.div>
+  );
+
+  return (
+    <div ref={ref} className="relative pb-12 last:pb-0">
+      <div className="grid grid-cols-[56px_1fr] gap-5 md:hidden">
+        {circle}
+        {card}
+      </div>
+
+      <div className="hidden md:grid md:grid-cols-[1fr_72px_1fr] md:items-center md:gap-8">
+        {cardOnRight ? (
+          <>
+            <div />
+            <div className="flex items-center justify-center">
+              <div
+                className={`absolute left-1/2 ml-9 h-px w-8 transition-colors duration-500 ${reached ? "bg-brand" : "bg-light"}`}
+              />
+              {circle}
+            </div>
+            <div className="pl-8">{card}</div>
+          </>
+        ) : (
+          <>
+            <div className="flex justify-end pr-8">{card}</div>
+            <div className="flex items-center justify-center">
+              <div
+                className={`absolute right-1/2 mr-9 h-px w-8 transition-colors duration-500 ${reached ? "bg-brand" : "bg-light"}`}
+              />
+              {circle}
+            </div>
+            <div />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HowStepsFlow() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const onEnter = (i: number) => setActiveIndex((cur) => (i > cur ? i : cur));
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start center", "end center"],
+  });
+  const lineScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
+
+  return (
+    <div ref={containerRef} className="relative mt-12 max-w-5xl mx-auto">
+      <div className="absolute left-[27px] top-0 h-full w-px bg-light md:left-1/2 md:-translate-x-1/2" />
+      <motion.div
+        style={{ scaleY: lineScale, transformOrigin: "top" }}
+        className="absolute left-[27px] top-0 h-full w-px bg-brand md:left-1/2 md:-translate-x-1/2"
+      />
+      {HOW_STEPS.map((s, i) => (
+        <HowStep
+          key={s.title}
+          index={i}
+          icon={s.icon}
+          title={s.title}
+          desc={s.desc}
+          activeIndex={activeIndex}
+          onEnter={onEnter}
+        />
+      ))}
+    </div>
+  );
+}
 
 function HomePage() {
   const navigate = useNavigate();
