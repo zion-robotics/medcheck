@@ -28,6 +28,8 @@ function AlertsPage() {
   const allAlerts = useMemo(() => getAlerts(), []);
   const states = useMemo(() => ["All", ...getAvailableStates()], []);
   const [filter, setFilter] = useState("All");
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const alerts = useMemo(
     () => (filter === "All" ? allAlerts : allAlerts.filter((a) => a.state === filter)),
     [filter, allAlerts],
