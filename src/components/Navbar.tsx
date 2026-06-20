@@ -47,7 +47,7 @@ export function Navbar() {
 
           <nav className="hidden lg:flex items-center gap-1 relative">
             {NAV.map(({ to, label }) => {
-              const active = pathname === to || (to !== "/" && pathname.startsWith(to));
+              const active = pathname.startsWith(to);
               return (
                 <Link
                   key={to}
@@ -114,7 +114,7 @@ export function Navbar() {
               </div>
               <nav className="flex flex-col p-3 gap-1">
                 {NAV.map(({ to, label, icon: Icon }, i) => {
-                  const active = pathname === to || (to !== "/" && pathname.startsWith(to));
+                  const active = pathname.startsWith(to);
                   return (
                     <motion.div key={to} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 + i * 0.04 }}>
                       <Link
