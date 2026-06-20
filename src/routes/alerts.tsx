@@ -44,9 +44,11 @@ function AlertsPage() {
 
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2 card-surface overflow-hidden h-[420px] sm:h-[560px] relative">
-            <Suspense fallback={<MapLoading />}>
-              <MapView alerts={alerts} />
-            </Suspense>
+            {mounted ? (
+              <Suspense fallback={<MapLoading />}>
+                <MapView alerts={alerts} />
+              </Suspense>
+            ) : <MapLoading />}
           </div>
 
           <div className="card-surface p-5 max-h-[560px] flex flex-col">
