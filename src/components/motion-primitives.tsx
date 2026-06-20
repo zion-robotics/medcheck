@@ -34,8 +34,8 @@ export function RevealWords({ text, className = "", delay = 0, stagger = 0.06 }:
           key={i}
           className="inline-block"
           variants={{
-            hidden: { opacity: 0, y: 16, filter: "blur(8px)" },
-            visible: { opacity: 1, y: 0, filter: "blur(0)", transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+            hidden: { opacity: 0, y: 16 },
+            visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
           }}
         >
           {w}{i < words.length - 1 ? "\u00A0" : ""}
