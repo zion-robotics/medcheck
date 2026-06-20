@@ -206,11 +206,11 @@
 .gradient-border:hover::before { opacity: 1; }
 
 /* ===== Story link ===== */
-@utility story-link {
+.story-link {
   position: relative;
   display: inline-block;
 }
-@utility story-link::after {
+.story-link::after {
   content: "";
   position: absolute;
   left: 0;
@@ -222,7 +222,7 @@
   transform-origin: right;
   transition: transform 0.35s cubic-bezier(0.65, 0, 0.35, 1);
 }
-@utility story-link:hover::after { transform: scaleX(1); transform-origin: left; }
+.story-link:hover::after { transform: scaleX(1); transform-origin: left; }
 
 /* ===== Animations ===== */
 @keyframes float-y {
